@@ -12,8 +12,29 @@ if exists('g:loaded_nerd_tree') && g:loaded_nerd_tree == 1 && !exists('g:NERDTre
     \ echomsg 'nerdtree-file-icon requires a newer version of NERDTree.'
 endif
 
+if !exists('g:NERDTreeFileIcon')
+  let g:NERDTreeFileIcon = '🗒'
+endif
+
+if !exists('g:NERDTreeFileIconFrontPadding')
+  let g:NERDTreeFileIconFrontPadding = ' '
+endif
+
+if !exists('g:NERDTreeFileIconBackPadding')
+  let g:NERDTreeFileIconBackPadding = ' '
+endif
+
+augroup nerd_tree_file_icon_hide_conceal_brackets
+  au!
+  autocmd FileType nerdtree syntax match hideBracketsInNerdTree "\]" contained conceal containedin=ALL
+  autocmd FileType nerdtree syntax match hideBracketsInNerdTree "\[" contained conceal containedin=ALL
+  autocmd FileType nerdtree set conceallevel=3
+  autocmd FileType nerdtree set concealcursor=nvic
+augroup END
+
 function! NERDTreeFileIconRefreshListener(event)
   let path = a:event.subject
+  let flag = ''
 
   let fileNodeSymbol = g:NERDTreeFileIcon
   let backPadding = g:NERDTreeFileIconFrontPadding
@@ -21,10 +42,11 @@ function! NERDTreeFileIconRefreshListener(event)
 
   if !path.isDirectory
     let flag = frontPadding . fileNodeSymbol . backPadding
+  endif
 
   call path.flagSet.clearFlags('file_icon')
 
-  if flag !=? ''
+  if flag !=# ''
     call path.flagSet.addFlag('file_icon', flag)
   endif
 
@@ -36,9 +58,6 @@ function! s:SetupListeners()
   call g:NERDTreePathNotifier.AddListener('refreshFlags', 'NERDTreeFileIconRefreshListener')
 endfunction
 
-" util like helpers
-" scope: local
-function! s:Refresh()
-  call b:NERDTree.root.refreshFlags()
-  call NERDTreeRender()
-endfunction
+if g:loaded_nerdtree_file_icon
+  call s:SetupListeners()
+endif
